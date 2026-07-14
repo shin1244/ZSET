@@ -14,12 +14,11 @@ public:
 		if (it != dict_.end()) {
 			int old = it->second;
 			if (old == score) return;
-
-			sl_.erase({ old, member });
+			sl_.erase({ -old, member });
 		}
 		dict_[member] = score;
 
-		sl_.insert({ score , member }, member);
+		sl_.insert({ -score , member }, member);
 	}
 
 	bool score(const std::string& member, int& out) const 
@@ -29,7 +28,7 @@ public:
 			return false;
 		}
 
-		out = it->second;
+		out = -it->second;
 		return true;
 	}
 
@@ -50,7 +49,7 @@ public:
 		const auto it = dict_.find(member);
 		if (it == dict_.end()) return -1;
 		int score = it->second;
-		return sl_.size() - sl_.getRank({ score , member }) + 1;
+		return sl_.getRank({ -score , member });
 	}
 
 	bool getByRank(const int rank, std::string& out) const {
@@ -61,18 +60,36 @@ public:
 		return true;
 	}
 
-	std::vector<std::pair<std::string, int>> range(int start, int stop) const
-	{
-		
+	std::vector<std::pair<std::string, int>> range(int start, int stop) const {
+		std::vector<std::pair<std::string, int>> result;
+		for (int i = start; i <= stop; ++i) {
+			std::pair<int, std::string> key;
+			std::string value;
+			if (sl_.getByRank(i, key, value)) {
+				result.emplace_back(value, -key.first);
+			}
+		}
+		return result;
 	}
 
-	int count() const
-	{
-		
+	int count() const {
+		return sl_.size();
 	}
 
 	bool incrBy(const std::string& member, int delta, int& out)
 	{
-		
+		auto it = dict_.find(member);
+		int newScore;
+		if (it == dict_.end())
+		{	
+			newScore = delta;
+		} 
+		else
+		{
+			newScore = it->second + delta;
+		}
+		add(member, newScore);
+		out = newScore;
+		return true;
 	}
 };

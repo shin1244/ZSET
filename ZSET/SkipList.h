@@ -174,25 +174,6 @@ public:
 		return false;
 	}
 
-	void rangeSearch(const Key& k1,const Key& k2, std::vector<Node*>& v) {
-		if (k1 > k2) return;
-		Node* cur = head_;
-		for (int i = level_; i >= 0; --i)
-		{
-			while (cur->forward[i].next != nullptr 
-				&& cur->forward[i].next->key < k1)
-			{
-				cur = cur->forward[i].next;
-			}
-		}
-		cur = cur->forward[0].next;
-		while (cur != nullptr && cur->key <= k2)
-		{
-			v.push_back(cur);
-			cur = cur->forward[0].next;
-		}
-	}
-
 	int size() const { return size_; }
 	bool empty() const { return size_ == 0; }
 
