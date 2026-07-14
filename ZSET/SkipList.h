@@ -124,7 +124,7 @@ public:
 			update[i]->forward[i].span = rank[0] - rank[i] + 1;
 		}
 
-		for (int i = lvl; i <= level_; ++i)
+		for (int i = lvl + 1; i <= level_; ++i)
 		{
 			update[i]->forward[i].span += 1;
 		}
@@ -132,11 +132,90 @@ public:
 	}
 
 	bool erase(const Key& key) {
+		Node* update[MAX_LEVEL + 1];
+		for (int i = 0; i <= MAX_LEVEL; ++i)
+		{
+			update[i] = nullptr;
+		}
+		Node* cur = head_;
+		for (int i = level_; i >= 0; --i)
+		{
+			while (cur->forward[i].next != nullptr
+				&& cur->forward[i].next->key < key)
+			{
+				cur = cur->forward[i].next;
+			}
+			update[i] = cur;
+		}
+		cur = cur->forward[0].next;
+		if (cur != nullptr && cur->key == key)
+		{
+			for (int i = level_; i >= 0; --i)
+			{
+				if (update[i]->forward[i].next == cur)
+				{
+					update[i]->forward[i].span += cur->forward[i].span - 1;
+					update[i]->forward[i].next = cur->forward[i].next;
+				} 
+				else
+				{
+					update[i]->forward[i].span -= 1;
+				}
+			}
+			delete cur;
+
+			while (level_ > 0 && head_->forward[level_].next == nullptr) {
+				level_--;
+			}
+			size_--;
+
+			return true;
+		}
+		return false;
 	}
 
-	void rangeSearch(Key& k1, Key& k2, std::vector<Node*>& v) {
+	void rangeSearch(const Key& k1,const Key& k2, std::vector<Node*>& v) {
+		if (k1 > k2) return;
+		Node* cur = head_;
+		for (int i = level_; i >= 0; --i)
+		{
+			while (cur->forward[i].next != nullptr 
+				&& cur->forward[i].next->key < k1)
+			{
+				cur = cur->forward[i].next;
+			}
+		}
+		cur = cur->forward[0].next;
+		while (cur != nullptr && cur->key <= k2)
+		{
+			v.push_back(cur);
+			cur = cur->forward[0].next;
+		}
 	}
 
-	int size() { return size_; }
-	bool empty() { return size_ == 0; }
+	int size() const { return size_; }
+	bool empty() const { return size_ == 0; }
+
+	int getRank(const Key& key) const
+	{
+		Node* cur = head_;
+		int rank = 0;
+
+		for (int i = level_; i >= 0; --i)
+		{
+			while (cur->forward[i].next != nullptr
+				&& cur->forward[i].next->key < key)
+			{
+				rank += cur->forward[i].span;
+				cur = cur->forward[i].next;
+			}
+		}
+		cur = cur->forward[0].next;
+		
+		if (cur != nullptr && cur->key == key)
+		{
+			return rank + 1;
+		}
+		return -1;
+	}
 };
