@@ -28,7 +28,7 @@ public:
 			return false;
 		}
 
-		out = -it->second;
+		out = it->second;
 		return true;
 	}
 
@@ -44,19 +44,18 @@ public:
 		return true;
 	}
 
-	int rank(const std::string& member)
-	{
+	int rank(const std::string& member) const {
 		const auto it = dict_.find(member);
 		if (it == dict_.end()) return -1;
-		int score = it->second;
-		return sl_.getRank({ -score , member });
+		return sl_.getRank({ -it->second, member });
 	}
 
-	bool getByRank(const int rank, std::string& out) const {
+	bool getByRank(int rank, std::string& outMember, int& outScore) const {
 		std::pair<int, std::string> key;
 		std::string value;
 		if (!sl_.getByRank(rank, key, value)) return false;
-		out = value;
+		outMember = value;
+		outScore = -key.first;
 		return true;
 	}
 
