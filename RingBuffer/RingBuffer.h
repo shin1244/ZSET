@@ -10,26 +10,29 @@ private:
 	std::atomic<size_t> head_{ 0 };
 	std::atomic<size_t> tail_{ 0 };
 public:
-	bool empty() const { return count_ == 0; }
-	bool full() const { return count_ == N; }
-	size_t size() const { return count_; }
-	size_t capacity() const { return N; }
+	static constexpr size_t capacity() { return N - 1; }
 
 	bool push(const T& value)
 	{
-		if (full()) return false;
-		buffer_[tail_] = value;
-		tail_ = (tail_ + 1) % N;
-		++count_;
+		size_t t = tail_.load(std::memory_order_relaxed);
+		size_t next = (t + 1) % N;
+
+		if (next == head_.load(std::memory_order_acquire))
+			return false;
+
+		buffer_[t] = value;
+		tail_.store(next, std::memory_order_release);
 		return true;
 	}
 
 	bool pop(T& out)
 	{
-		if (empty()) return false;
-		out = buffer_[head_];
-		head_ = (head_ + 1) % N;
-		--count_;
+		size_t h = head_.load(std::memory_order_relaxed);
+
+		if (h == tail_.load(std::memory_order_acquire))
+			return false;
+		out = buffer_[h];
+		head_.store((h + 1) % N, std::memory_order_release);
 		return true;
 	}
 };
